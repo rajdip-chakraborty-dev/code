@@ -1,0 +1,61 @@
+output "vpc_id" {
+  description = "ID of the VPC"
+  value       = module.vpc.vpc_id
+}
+
+output "public_subnet_ids" {
+  description = "IDs of the public subnets"
+  value       = module.vpc.public_subnet_ids
+}
+
+output "private_subnet_ids" {
+  description = "IDs of the private subnets"
+  value       = module.vpc.private_subnet_ids
+}
+
+output "ec2_instance_id" {
+  description = "ID of the EC2 instance"
+  value       = module.ec2.instance_id
+}
+
+output "ec2_public_ip" {
+  description = "Public IP address of the EC2 instance"
+  value       = module.ec2.public_ip
+}
+
+output "ec2_private_ip" {
+  description = "Private IP address of the EC2 instance"
+  value       = module.ec2.private_ip
+}
+
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket"
+  value       = module.s3.bucket_name
+}
+
+output "s3_bucket_arn" {
+  description = "ARN of the S3 bucket"
+  value       = module.s3.bucket_arn
+}
+
+output "secrets_manager_ec2_secret_arn" {
+  description = "ARN of the EC2 credentials secret"
+  value       = module.secrets_manager.ec2_secret_arn
+}
+
+output "secrets_manager_s3_secret_arn" {
+  description = "ARN of the S3 bucket info secret"
+  value       = module.secrets_manager.s3_bucket_secret_arn
+}
+
+# Sensitive outputs
+output "ec2_username" {
+  description = "Username for EC2 instance (stored in Secrets Manager)"
+  value       = var.ec2_username
+  sensitive   = true
+}
+
+output "random_suffix" {
+  description = "Random suffix used for unique naming"
+  value       = random_string.suffix.result
+}

@@ -1,0 +1,60 @@
+# Here’s a sample Azure DevOps YAML pipeline template for a multi-stage CI/CD workflow. It builds Docker images, pushes them to Azure Container Registry (ACR), and deploys to Azure Kubernetes Service (AKS). It uses Azure Key Vault for secrets and a Variable Group from Pipelines > Library.
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  - group: MyVariableGroup # Pipelines > Library > Variable Groups
+
+stages:
+  - stage: Build
+    displayName: 'Build and Push Docker Image'
+    jobs:
+      - job: Build
+        displayName: 'Build'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: AzureKeyVault@2
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              KeyVaultName: '$(keyVaultName)'
+              SecretsFilter: 'acr-username,acr-password'
+              RunAsPreJob: true
+
+          - script: |
+              docker build -t $(acrName).azurecr.io/$(imageName):$(Build.BuildId) .
+              echo $(acr-password) | docker login $(acrName).azurecr.io -u $(acr-username) --password-stdin
+              docker push $(acrName).azurecr.io/$(imageName):$(Build.BuildId)
+            displayName: 'Build and Push Docker Image'
+
+  - stage: Release
+    displayName: 'Deploy to AKS'
+    dependsOn: Build
+    jobs:
+      - job: Deploy
+        displayName: 'Deploy'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: AzureKeyVault@2
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              KeyVaultName: '$(keyVaultName)'
+              SecretsFilter: 'aks-kubeconfig'
+              RunAsPreJob: true
+
+          - script: |
+              echo "$(aks-kubeconfig)" > kubeconfig
+              export KUBECONFIG=kubeconfig
+              kubectl set image deployment/$(deploymentName) $(containerName)=$(acrName).azurecr.io/$(imageName):$(Build.BuildId) --namespace=$(namespace)
+            displayName: 'Deploy to AKS'
+# Notes:
+
+# Replace variable names (acrName, imageName, deploymentName, containerName, namespace, etc.) with your actual values.
+# Create a Variable Group in Azure DevOps Library with variables like azureSubscription, keyVaultName, etc.
+# Store secrets (acr-username, acr-password, aks-kubeconfig) in Azure Key Vault.
+# The pipeline uses the AzureKeyVault@2 task to fetch secrets securely.
+# The build stage builds and pushes the Docker image to ACR.
+# The release stage deploys the image to AKS using kubectl set image.
