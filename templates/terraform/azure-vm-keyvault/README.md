@@ -7,6 +7,39 @@ This Terraform template deploys a complete Azure infrastructure including:
 - Virtual Network with subnet and NSG
 - Resource Group
 
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Azure Resource Group                     │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │              Virtual Network (VNet)                   │  │
+│  │  ┌─────────────────────────────────────────────────┐  │  │
+│  │  │                 Subnet                          │  │  │
+│  │  │                                                 │  │  │
+│  │  │  ┌────────────────────┐     ┌──────────────┐   │  │  │
+│  │  │  │  Virtual Machine   │     │    NSG       │   │  │  │
+│  │  │  │  (Ubuntu 22.04)    │◄────┤ • SSH (22)   │   │  │  │
+│  │  │  │  • Public IP       │     │ • HTTP (80)  │   │  │  │
+│  │  │  │  • NIC             │     │ • HTTPS (443)│   │  │  │
+│  │  │  └────────────────────┘     └──────────────┘   │  │  │
+│  │  └─────────────────────────────────────────────────┘  │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                           │                  │              │
+│                           │                  │              │
+│  ┌────────────────────────▼──────┐  ┌────────▼──────────┐  │
+│  │     Azure Key Vault           │  │ Storage Account   │  │
+│  │  ┌─────────────────────────┐  │  │ • Blob Container  │  │
+│  │  │ Secrets:                │  │  │ • Lifecycle Rules │  │
+│  │  │ • vm-admin-username     │  │  │ • Access Policies │  │
+│  │  │ • vm-admin-password     │  │  └───────────────────┘  │
+│  │  │ • storage-account-key   │  │                         │
+│  │  └─────────────────────────┘  │                         │
+│  └────────────────────────────────┘                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ## Features
 
 - **Modular Design**: Each resource type is defined in its own module for reusability
